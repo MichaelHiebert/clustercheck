@@ -1,0 +1,28 @@
+*/Users/michaelhiebert/Development/clustercheck/data/test/0000045
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/010.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/011.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/005.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/007.jpg
+*/Users/michaelhiebert/Development/clustercheck/data/test/00124
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/017.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/001.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/015.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/014.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/008 copy.jpg
+*/Users/michaelhiebert/Development/clustercheck/data/test/00124
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/010.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/005.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/013.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/007.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/005 copy.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/008.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/020.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/018.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/008 copy.jpg
+*/Users/michaelhiebert/Development/clustercheck/data/test/0000045
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/014.jpg
+*/Users/michaelhiebert/Development/clustercheck/data/test/0000045
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/015.jpg
+/Users/michaelhiebert/Development/clustercheck/data/test/0000045/012.jpg
+*/Users/michaelhiebert/Development/clustercheck/data/test/00124
+/Users/michaelhiebert/Development/clustercheck/data/test/00124/014.jpg
