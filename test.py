@@ -35,7 +35,7 @@ def scenario_one():
 
     print(g.metrics())
 
-def scenario_two():
+def scenario_two(per_cluster=50):
     print('***Scenario Two***')
     a1 = ClusterFCVertex('a1')
     a2 = ClusterFCVertex('a2')
@@ -57,7 +57,7 @@ def scenario_two():
     a1.add_pred_neighbor(a3)
     a2.add_pred_neighbor(b1)
 
-    for i in range(3, 100): # make c a cluster of 1000
+    for i in range(4, per_cluster): # make c a cluster of 1000
         v = ClusterFCVertex('a{}'.format(i))
         g.add_vertex(v)
         v.add_neighbor(a1)
@@ -69,7 +69,7 @@ def scenario_two():
     b1.add_pred_neighbor(b2)
     b2.add_pred_neighbor(b3)
 
-    for i in range(3, 100): # make c a cluster of 1000
+    for i in range(4, per_cluster): # make c a cluster of 1000
         v = ClusterFCVertex('b{}'.format(i))
         g.add_vertex(v)
         v.add_neighbor(b1)
@@ -78,7 +78,7 @@ def scenario_two():
     c1.add_neighbor(c2)
     c1.add_pred_neighbor(c2)
 
-    for i in range(3, 100): # make c a cluster of 1000
+    for i in range(4, per_cluster): # make c a cluster of 1000
         v = ClusterFCVertex('c{}'.format(i))
         g.add_vertex(v)
         v.add_neighbor(c1)
@@ -87,12 +87,21 @@ def scenario_two():
     c1.add_pred_neighbor(a1)
 
     g.update()
-    print('post 1')
 
     print(g.metrics())
+
+    print(g)
+
+    g.save_clusters('testest')
+
+    g.load_clusters('testest.json')
+
+    print(g.metrics())
+
+    print(g)
 
 # def scenario
 
 if __name__ == "__main__":
-    scenario_one()
-    scenario_two()
+    # scenario_one()
+    scenario_two(5)

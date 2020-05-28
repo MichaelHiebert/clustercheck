@@ -7,6 +7,11 @@ import random
 import numpy as np
 from numpy.random import default_rng
 from functools import partial
+from datetime import datetime
+
+def get_timestamp_string():
+    dt = datetime.now()
+    return '{}-{}-{}_{}:{}:{}'.format(dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second)
 
 class DisplayState(Enum):
     DIR_LEVEL = 0
@@ -66,7 +71,6 @@ class Display:
     def _handle_close(self):
         # TODO save all
         self.root.destroy()
-
 
     def _set_mainframe(self):
         """
@@ -201,10 +205,88 @@ class Display:
                     setattr(self, 'grid_{}{}'.format(row, col), ttk.Button(master=self.imgs, image=image, command=partial(self._start_eval, img_path)))
                     getattr(self, 'grid_{}{}'.format(row, col)).grid(column=col, columnspan=1, row=row, rowspan=1, sticky=NSEW)
                     getattr(self, 'grid_{}{}'.format(row, col)).image=image
-                    
-                    
-            
 
+class MetaDisplay:
+    def __init__(self, cluster_interface):
+        self.ci = cluster_interface
+
+        self.width = 600
+        self.height = 600
+        self.num_rows = 5
+        self.num_cols = 5
+
+        self._set_mainframe()
+
+        self._set_subdirframe()
+
+        self.root.protocol('WM_DELETE_WINDOW', self._handle_close)
+        self.root.mainloop()
+
+    def _choose_random_directory(self, master_dir):
+        cluster_dirs = ['{}/{}'.format(self.master_dir, d) for d in next(os.walk(master_dir))[1]]
+
+        available = set(cluster_dirs).difference(self.seen)
+
+        if len(available) == 0: # no more available folders!
+            return False
+
+        return random.choice(list(available))
+
+    def _handle_close(self):
+        t = get_timestamp_string()
+        self.ci.graph.save_clusters(t)
+        print('Saved to {}.json'.format(t))
+        self.root.destroy()
+
+    def _set_mainframe(self):
+        """
+            Sets the root and main frame of the GUI
+        """
+
+        self.root = Tk()
+        self.title = 'Cluster Checker'
+        self.root.minsize(width=self.width, height=self.height)
+
+        self.mainframe = ttk.Frame(self.root, padding="3 3 12 12")
+        self.mainframe.grid(column=0, row=0, sticky=NS)
+
+    def _set_subdirframe(self):
+        """
+            Sets the subdirectory view frame of the GUI
+        """
+
+        pairing = self.ci.suggest_pairing()
+
+        if pairing is False:
+            self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
+            self.subdirframe.grid(column=0,row=0,sticky=NSEW)
+            self.label = ttk.Label(master=self.subdirframe, text='No more available clusters. Please exit, (this will save automatically).')
+            self.label.grid(column=0,row=0,sticky=NSEW)
+        else:
+            self.root.title('Do these belong to the same cluster?')
+            im1,im2 = pairing
+
+            imwidth = self.width
+            imheight = self.height
+
+            self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
+            self.subdirframe.grid(column=0, row=0, sticky=NSEW)
+
+            model_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im1)).resize((imwidth, imheight)))
+            model = ttk.Label(master=self.subdirframe, image=model_img)
+            model.image = model_img
+            model.grid(column=0, row=0, sticky=NSEW)
+
+            comp_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im2)).resize((imwidth, imheight)))
+            comp = ttk.Label(master=self.subdirframe, image=comp_img)
+            comp_img.image = comp_img
+            comp.grid(column=1, row=0, sticky=NSEW)
+
+            no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.is_bad_pairing, im1, im2, self._set_subdirframe))
+            no.grid(column=0, row=1, sticky=NSEW)
+
+            yes = Button(master=self.subdirframe, text='YES', height=10, command=partial(self.ci.is_good_pairing, im1, im2, self._set_subdirframe))
+            yes.grid(column=1, row=1, sticky=NSEW)
 
 if __name__ == "__main__":
     # root = Tk()  
@@ -216,3 +298,5 @@ if __name__ == "__main__":
 
     master = '/Users/michaelhiebert/Development/clustercheck/data/test'
     d = Display(master)
+
+    print('hello')
