@@ -102,7 +102,7 @@ class Display:
 
         self.results = list()
 
-        self.root.title('Are these photos of the same people?')
+        self.root.title('Are these from the same cluster?')
 
         self._set_subdirframe(0)
 
@@ -180,7 +180,7 @@ class Display:
         imwidth = self.width // num_cols
         imheight = self.width // num_rows
 
-        self.root.title('Please select the face that you believe represents this cluster')
+        self.root.title('Please select the image that you believe represents this cluster')
 
         self.dirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
         self.dirframe.grid(column=0, row=0, sticky='NSEW')
@@ -260,8 +260,8 @@ class MetaDisplay:
 
         c = self.ci.clusters
 
-        print(c)
-
+        self.ci.set_potency()
+        self.root.title('Do these belong to the same cluster? Potency: {}'.format(self.ci.potency))
         if check_self:
             cluster,_ = self.ci.suggest_intra_pairing()
 
@@ -297,7 +297,6 @@ class MetaDisplay:
                 self.label = ttk.Label(master=self.subdirframe, text='No more available clusters. Please exit, (this will save automatically).')
                 self.label.grid(column=0,row=0,sticky=NSEW)
             else:
-                self.root.title('Do these belong to the same cluster?')
                 im1,im2 = pairing
 
                 imwidth = self.width

@@ -1,0 +1,8 @@
+name: clustercheck
+
+dependencies:
+  - pip
+  - python>=3.8
+  - pip:
+    - numpy
+    - Pillow

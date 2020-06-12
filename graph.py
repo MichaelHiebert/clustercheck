@@ -155,13 +155,17 @@ class ClusterWrapper:
 
         self.meta_clusters = [MetaCluster(x, self.num_clusters) for x in range(self.num_clusters)] # seen clusters
 
+    def set_potency(self):
+        pluripotent = [x for x in self.meta_clusters if x.still_potent()]
+        self.potency,_ = sum([len(x.can_be) for x in pluripotent]), len(pluripotent)
+
     def suggest_pairing(self):
         """
             Returns a tuple of two cluster IDs if a pairing is available, else False
         """
         pluripotent = [x for x in self.meta_clusters if x.still_potent()]
 
-        self.potency = sum([len(x.can_be) for x in pluripotent]), len(pluripotent)
+        self.potency,_ = sum([len(x.can_be) for x in pluripotent]), len(pluripotent)
             
         if len(pluripotent) == 0: return False
 
@@ -239,7 +243,6 @@ class ClusterWrapper:
         self._clean_meta_clusters(self)
 
     def _clean_meta_clusters(self, id):
-        print('cleaning')
         for i,c in enumerate(self.clusters):
             if len(c) == 0:
                 to_rem = None

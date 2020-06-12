@@ -1,6 +1,12 @@
 # clustercheck
 A simple tool for verifying precision/recall of clusters.
 
+## Setup
+```
+conda env create -f environment.yml
+conda activate clustercheck
+```
+
 ## Usage
 
 The default command syntax is:
@@ -23,6 +29,33 @@ where `COMMAND_TYPE` is one of
 ```
 python main.py full data/test
 ```
+
+## Cluster Potency
+
+At the onset of any uncertain clustering, there are a number of different states that the graph (and each of its nodes) could be in. Until it has been hand checked, our clustering could _evolve_ into any one of a number of different ground-truth clusterings. I've taken this concept and called it graph [potency](https://en.wikipedia.org/wiki/Cell_potency), after a similar property possessed by stem cells.
+
+Potency is calculated by determining how many other existing clusters a specific cluster _could_ be, and graph potency is just the cluster-wise sum of this value.
+
+A brief example:
+```
+Clusters
+--------
+A (could be B, C)
+B (could be A, C)
+C (could be A, B)
+```
+
+In this example above, the graph has potency `2 + 2 + 2 = 6`. Now, if we manually determine that `A != B`, we get:
+```
+Clusters
+--------
+A (could be C)
+B (could be C)
+C (could be A, B)
+```
+to arrive at potency `1 + 1 + 2 = 4`.
+
+Potency is simply a helpful guage of how far along a graph is to being completely verified. The lower the potency, the more complete it is.
 
 ## JSON Structure
 ```
