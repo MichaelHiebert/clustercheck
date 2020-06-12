@@ -1,299 +1,129 @@
-import numpy as np
-from os import listdir
-from os.path import isfile, join
-import random
-import json
-
-from display import MetaDisplay
-
-class FCVertex:
-    """Fully Connected Vertex - the neighbor of my neighbor is my neighbor, ad infinitum"""
-
+class ClusterVertex:
     def __init__(self, name, neighbors=None):
         self.name = name
-
+        
         if neighbors is not None:
             self.neighbors = neighbors
         else:
             self.neighbors = set()
 
     def connected_to(self, other_vertex):
-        return other_vertex in self.neighbors
+        """
+            Returns True if this vertex is connected to `other_vertex`, else False.
+        """
+        raise NotImplementedError
 
     def add_neighbor(self, other_vertex):
-        self.neighbors.add(other_vertex)
-        other_vertex.neighbors.add(self)
-
-    def _get_neighbors_rec(self, seen):
-        seen.add(self)
-        to_add = set()
-        for n in self.neighbors.difference(seen):
-            to_add.update(n._get_neighbors_rec(seen))
-
-        seen.update(to_add)
-        return seen
-
-    def update(self, seen=None):
-        self.neighbors = self._get_neighbors_rec(set())
-
-        for neighbor in self.neighbors:
-            if self.neighbors != neighbor.neighbors:
-                neighbor.neighbors == self.neighbors.copy()
-        
-    def __str__(self):
-        return '{} :: {}'.format(self.name, set([v.name for v in self.neighbors]))
-
-
-class ClusterFCVertex(FCVertex):
-    """Subtype of `FCVertex for use in evaluating clusters"""
-    def __init__(self, name, neighbors=None, pred_neighbors=None):
-        super(ClusterFCVertex, self).__init__(name, neighbors)
-
-        if pred_neighbors is not None:
-            self.pred_neighbors = pred_neighbors
-        else:
-            self.pred_neighbors = set()
-
-    def add_pred_neighbor(self, other_vertex):
-        self.pred_neighbors.add(other_vertex)
-        other_vertex.pred_neighbors.add(self)
-
-    def _get_pred_neighbors_rec(self, seen):
-        seen.add(self)
-        to_add = set()
-        for n in self.pred_neighbors.difference(seen):
-            to_add.update(n._get_pred_neighbors_rec(seen))
-
-        seen.update(to_add)
-        return seen
-
-    def update_pred(self, seen=None):
-        self.pred_neighbors = self._get_pred_neighbors_rec(set())
-        for neighbor in self.pred_neighbors:
-            if self.pred_neighbors != neighbor.pred_neighbors:
-                neighbor.pred_neighbors == self.pred_neighbors.copy()
-
-    def node_metrics(self):
         """
-            Returns the calculated precision, recall, and fscore contribution of this specific node.
+            Add a neighbor `other_vertex` to this vertex and vice versa.
+        """
+        raise NotImplementedError
 
-            True Postives are edges that exist in `pred` and also in `label`
-
-            False Positives are edges that exist in `pred` but not in `label`
-
-            True Negatives are edges not found in either, but are irrelevant anyways.
-
-            False Negatives are edges not in `pred`, but are in `label`
+    def get_neighbors(self):
+        """
+            Returns a set of the neighbors of this vertex.
         """
 
-        tp = len(self.pred_neighbors.intersection(self.neighbors))
-        fp = len(self.pred_neighbors.difference(self.neighbors))
-        fn = len(self.neighbors.difference(self.pred_neighbors))
-
-        if tp == 0: return 0,0,0
-
-        precision = tp / (tp + fp)
-        recall = tp / (tp + fn)
-
-        fscore = 2 * (precision * recall) / (precision + recall)
-
-        return precision, recall, fscore
+    def isolate(self):
+        """
+            Remove all neighbors from this vertex.
+        """
+        raise NotImplementedError
 
     def json(self):
         """
-            Returns this node in json form
+            A toJSON() method.
         """
-
-        pred_neighbor_list = [x.name for x in self.pred_neighbors]
-
-        return {
-            'name': self.name,
-            'pred_neighbors': pred_neighbor_list
-        }
-
-    # def copy(self, source=True):
-    #     """
-    #         The graph NEEDS to be updated after a full-copy
-    #     """
-    #     preds = set([ClusterFCVertex(n.name) for n in self.pred_neighbors])
-    #     reals = set([ClusterFCVertex(n.name) for n in self.neighbors])
-    #     return ClusterFCVertex(self.name, neighbors=reals, pred_neighbors=preds)
+        raise NotImplementedError
 
     def __str__(self):
-        return super().__str__() + ' :: {}'.format(set([v.name for v in self.pred_neighbors]))
+        return '{} :: {}'.format(self.name, [n.name for n in self.get_neighbors()])
+
+    def __eq__(self, other):
+        return isinstance(self, ClusterVertex) and self.name == other.name
+
+    def __hash__(self):
+        return hash(self.name)
 
 class ClusterGraph:
+    """
+        A graph of clusters
+    """
     def __init__(self, vertices):
+        """
+            Every ClusterGraph has a set of vertices of abstract type `ClusterVertex`
+        """
         self.vertices = vertices
-        self.alone = set([vertex for vertex in self.vertices if len(vertex.neighbors) == 0])
-
-    def update(self):
-        for vertex in self.vertices:
-            vertex.update()
-            vertex.update_pred()
-
-        self.alone = set([vertex for vertex in self.vertices if len(vertex.neighbors) == 0])
 
     def add_vertex(self, vertex):
-        if vertex.name not in [n.name for n in self.vertices]:
-            self.vertices.add(vertex)
-        else:
-            raise Exception('Duplicate IDs not allowed')
+        """
+            Adds a vertex to this `ClusterGraph`
+        """
+        raise NotImplementedError
 
-    def to_contingency_matrix(self):
+    def get_clusters(self):
         """
-            Returns this graph as a contingency matrix,
+            Return a list of sets of `ClusterVertex`, where each set represents a distinct cluster in this graph.
         """
-        pass
+        raise NotImplementedError
+
+    def get_vertex(self, vertex_name):
+        """
+            Returns the vertex with the vertex_name if it exists, else False
+        """
+        raise NotImplementedError
+
+class CGMetricsWrapper:
+    """
+        A meta-graph with two subgraphs: predicted and actual.
+
+        We compare the nodes and edges of these two subgraphs to produce metrics.
+    """
+
+    def __init__(self, predicted=None, actual=None):
+        self.predicted = predicted
+        self.actual = actual
+
+    def load_from_text_file(self, text_file_path):
+        """
+            Constructs a `ClusterGraph` based on text-file input from
+            the binary labeler tool.
+        """
+
+        raise NotImplementedError
+
+    def save_to_json_file(self, json_file_path):
+        """
+            Saves this CGMetricsWrapper to a json file.
+        """
+        raise NotImplementedError
+
+    def load_from_json_file(self, json_file_path):
+        """
+            Constructs a `ClusterGraph` based on json-file input from the
+            meta-labeler tool.
+        """
+        raise NotImplementedError
 
     def metrics(self):
-        running_metrics = np.array([0.,0.,0.])
-        for vertex in self.vertices:
-            running_metrics += np.array(list(vertex.node_metrics()))
-
-        return running_metrics / len(self.vertices)
-
-    def load_from_text_file(self, filepath):
         """
-            Given a filepath to a text file with the FORMAT FROM THE BINARY LABELER,
-            ingest it into this graph.
+            Return the precision, recall, and fscore of this meta graph.
         """
+        raise NotImplementedError
 
-        with open(filepath, 'r') as f:
-            lines = f.read().split('\n')
+    def get_actual_vertex(self, vertex_name):
+        return self.actual.get_vertex(vertex_name)
 
-        cur_dir = ''
-        incorrect_faces = []
+# * * * * * * * * * * * * * #
+# NON-ABSTRACT GUI INTERFACES
+# * * * * * * * * * * * * * #
 
-        for line in lines:
-            if len(line) == 0: continue
+def get_timestamp_string():
+    from datetime import datetime
+    dt = datetime.now()
+    return '{}-{}-{}_{}:{}:{}'.format(dt.year,dt.month,dt.day,dt.hour,dt.minute,dt.second)
 
-            if line[0] == '*': # this is a folder
-                # handle the previously
-                self._handle_incorrects(cur_dir, incorrect_faces)
-
-                cur_dir = line[1:]
-                incorrect_faces = []
-            else: # this is an incorrect face
-                incorrect_faces.append(line)
-
-        self._handle_incorrects(cur_dir, incorrect_faces)
-
-        self.update()
-
-    def _handle_incorrects(self, cur_dir, incorrect_faces):
-        if cur_dir == '': return
-
-        all_files = set([join(cur_dir,f) for f in listdir(cur_dir) if isfile(join(cur_dir, f))])
-        if len(all_files) == 0: return
-
-        incorrect_faces = set(incorrect_faces)
-
-        corrects = all_files.difference(incorrect_faces)
-
-        # add corrects and cluster them
-        anchor_node = ClusterFCVertex(corrects.pop())
-        self.add_vertex(anchor_node)
-
-        for correct_name in corrects:
-            node = ClusterFCVertex(correct_name)
-            node.add_neighbor(anchor_node) # ground truth
-            node.add_pred_neighbor(anchor_node)
-            self.add_vertex(node)
-
-        for incorrect_name in incorrect_faces:
-            bad_node = ClusterFCVertex(incorrect_name)
-            bad_node.add_pred_neighbor(anchor_node)
-            self.add_vertex(bad_node)
-
-    def load_clusters(self, filename):
-        """
-            load from a json file with clusters
-        """
-        node_dict = dict()
-
-        self.vertices = set()
-        self.alone = set()
-
-        with open(filename) as f:
-            j = json.loads(f.read())
-
-        clusters = j['clusters']
-
-        pred_neighs = []
-
-        # load the ground truth
-        for cluster in clusters:
-            cluster = cluster['cluster']
-            node_names = [n['name'] for n in cluster]
-            node_neigh = [n['pred_neighbors'] for n in cluster]
-
-            pred_neighs.extend(node_neigh)
-
-            nodes = [ClusterFCVertex(name) for name in node_names]
-
-            for node in nodes:
-                node_dict[node.name] = node
-
-            while len(nodes) > 0:
-                node = nodes.pop(0)
-                for other_node in nodes:
-                    node.add_neighbor(other_node)
-
-                self.add_vertex(node)
-
-        for pred_neigh in pred_neighs:
-            first = node_dict[pred_neigh.pop(0)]
-
-            while len(pred_neigh) > 0:
-                node_name = pred_neigh.pop(0)
-                node_dict[node_name].add_pred_neighbor(first)
-        self.update()
-
-        vertex = list(self.vertices)[0]
-
-    def _get_vertex(self, name):
-        for vertex in list(self.vertices):
-            if vertex.name == name: return vertex
-
-        return None
-
-
-    def get_current_true_clusters(self):
-        bank = self.vertices.copy()
-
-        clusters = []
-
-        while len(bank) > 0:
-            cluster_anchor = bank.pop()
-            cluster = cluster_anchor.neighbors
-            clusters.append(cluster)
-            bank = bank.difference(cluster)
-
-        return clusters
-
-    def save_clusters(self, path):
-        """
-            Save to json
-        """
-        clusters = self.get_current_true_clusters()
-
-        json_clusters = [
-            { 'id': i, 'cluster': [node.json() for node in cluster] } for i, cluster in enumerate(clusters)
-        ]
-
-        json_dict = {
-            'clusters': json_clusters
-        }
-
-        if path[-5] != '.json':
-            path += '.json'
-
-        with open(path, 'w') as f:
-            f.write(json.dumps(json_dict, indent=4))
-
-    def __str__(self):
-        return '\n'.join([str(v) for v in self.vertices])
+import random
 
 class MetaCluster:
     def __init__(self, id, num_clusters):
@@ -317,10 +147,9 @@ class MetaCluster:
         return len(self.can_be) > 0
 
 class ClusterWrapper:
-    def __init__(self, cluster_graph):
-        self.graph = cluster_graph
-        self.clusters = self.graph.get_current_true_clusters()
-
+    def __init__(self, cg_metrics_wrapper):
+        self.graph = cg_metrics_wrapper
+        self.clusters = self.graph.actual.get_clusters()
 
         self.num_clusters = len(self.clusters)
 
@@ -328,7 +157,7 @@ class ClusterWrapper:
 
     def suggest_pairing(self):
         """
-            Returns a tuple of two filepaths if a pairing is available, else False
+            Returns a tuple of two cluster IDs if a pairing is available, else False
         """
         pluripotent = [x for x in self.meta_clusters if x.still_potent()]
 
@@ -336,67 +165,106 @@ class ClusterWrapper:
             
         if len(pluripotent) == 0: return False
 
-        cluster_one = random.choice(pluripotent)
-        cluster_two = self.meta_clusters[random.choice(list(cluster_one.can_be))]
+        metacluster_one = random.choice(pluripotent)
+        metacluster_two = self.meta_clusters[random.choice(list(metacluster_one.can_be))]
 
-        return cluster_one,cluster_two
+        return metacluster_one,metacluster_two
 
-    def get_node_name_from_cluster(self, cluster):
-        return random.choice(list(self.clusters[cluster.id])).name
+    def suggest_intra_pairing(self):
+        """
+            Returns a tuple of cluster IDs, where both are the same.
+        """
 
-    def is_good_pairing(self, c1, c2, callback=None):
-        c1.add_is(c2)
-        c2.add_is(c1)
+        cluster = random.choice(list(self.meta_clusters))
 
-        for same in c1.is_same:
-            self.meta_clusters[same].add_is(c2)
+        return cluster,cluster
 
-        for same in c2.is_same:
-            self.meta_clusters[same].add_is(c1)
+    def get_node_name_from_cluster(self, meta_cluster):
+        return random.choice(list(self.clusters[meta_cluster.id])).name
+
+    def is_good_pairing(self, mc1, mc2, callback=None):
+        mc1.add_is(mc2)
+        mc2.add_is(mc1)
+
+        for same in mc1.is_same:
+            self.meta_clusters[same].add_is(mc2)
+
+        for same in mc2.is_same:
+            self.meta_clusters[same].add_is(mc1)
+
+        if callback is not None:
+            callback()
+
+    def is_bad_pairing(self, mc1, mc2, callback=None):
+        mc1.add_cant(mc2)
+        mc2.add_cant(mc1)
+
+        for same in mc1.is_same:
+            self.meta_clusters[same].add_cant(mc2)
+
+        for same in mc2.is_same:
+            self.meta_clusters[same].add_cant(mc1)
 
         if callback is not None:
             callback()
 
-    def is_bad_pairing(self, c1, c2, callback=None):
-        c1.add_cant(c2)
-        c2.add_cant(c1)
+    def problem_with_cluster(self, cluster, image1, image2, callback=None):
+        act_cluster = self.clusters[cluster.id]
 
-        for same in c1.is_same:
-            self.meta_clusters[same].add_cant(c2)
+        if len(act_cluster) != 1: # if the length is one, there can be no problems
+            node1 = self.graph.get_actual_vertex(image1)
+            node2 = self.graph.get_actual_vertex(image2)
 
-        for same in c2.is_same:
-            self.meta_clusters[same].add_cant(c1)
+            act_cluster.remove(node1)
+            if node2 in act_cluster: act_cluster.remove(node2) # just in case we check the same image?
 
+            self._isolate_node_create_metacluster(node1)
+            if node2 != node1: self._isolate_node_create_metacluster(node2) # just in case we check the same image?
 
         if callback is not None:
             callback()
+
+    def _isolate_node_create_metacluster(self, node):
+        node.isolate()
+
+        num_clusters = len(self.meta_clusters)
+
+        self.clusters.append(set([node]))
+
+        for mc in self.meta_clusters:
+            mc.can_be.add(num_clusters)
+
+        self.meta_clusters.append(MetaCluster(num_clusters, num_clusters + 1))
+
+        self._clean_meta_clusters(self)
+
+    def _clean_meta_clusters(self, id):
+        print('cleaning')
+        for i,c in enumerate(self.clusters):
+            if len(c) == 0:
+                to_rem = None
+                for mc in self.meta_clusters:
+                    if mc.id == i:
+                        print('going to remove {}'.format(mc.id))
+                        to_rem = mc
+
+                    if i in mc.can_be: mc.can_be.remove(i)
+                    if i in mc.cant_be: mc.cant_be.remove(i)
+                    if i in mc.is_same: mc.is_same.remove(i)
+                if to_rem is not None: self.meta_clusters.remove(mc)
+
 
     def update_graph_and_return(self):
-        for cluster in self.meta_clusters:
-            idx = cluster.id
+        for metacluster in self.meta_clusters:
+            idx = metacluster.id
             random_node = random.choice(self.clusters[idx])
-            for same in cluster.is_same:
+            for same in metacluster.is_same:
                 other_rand_node = random.choice(self.clusters[same])
                 other_rand_node.add_neighbor(random_node)
 
-        self.graph.update()
-
         return self.graph
-                
 
-if __name__ == "__main__":
-    cg = ClusterGraph(set())
-
-    cg.load_from_text_file('data/test.txt')
-    cg.save_clusters('testtest')
-
-    cg = ClusterGraph(set())
-
-    cg.load_clusters('testtest.json')
-
-    # print(vertex.pred_neighbors)
-
-    # print(len(cg.get_current_true_clusters()))
-
-    # m = MetaDisplay(ClusterWrapper(cg))
-
+    def save(self, timestamp=None):
+        if timestamp is None:
+            timestamp = get_timestamp_string()
+        self.graph.save_to_json_file('{}.json'.format(timestamp))

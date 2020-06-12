@@ -207,8 +207,9 @@ class Display:
                     getattr(self, 'grid_{}{}'.format(row, col)).image=image
 
 class MetaDisplay:
-    def __init__(self, cluster_interface):
+    def __init__(self, cluster_interface, trust=75):
         self.ci = cluster_interface
+        self.trust = trust
 
         self.width = 600
         self.height = 600
@@ -218,6 +219,7 @@ class MetaDisplay:
         self._set_mainframe()
 
         self._set_subdirframe()
+
 
         self.root.protocol('WM_DELETE_WINDOW', self._handle_close)
         self.root.mainloop()
@@ -234,7 +236,7 @@ class MetaDisplay:
 
     def _handle_close(self):
         t = get_timestamp_string()
-        self.ci.graph.save_clusters(t)
+        self.ci.save(t)
         print('Saved to {}.json'.format(t))
         self.root.destroy()
 
@@ -254,39 +256,71 @@ class MetaDisplay:
         """
             Sets the subdirectory view frame of the GUI
         """
+        check_self = random.randint(0, 100) > self.trust
 
-        pairing = self.ci.suggest_pairing()
+        c = self.ci.clusters
 
-        if pairing is False:
-            self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
-            self.subdirframe.grid(column=0,row=0,sticky=NSEW)
-            self.label = ttk.Label(master=self.subdirframe, text='No more available clusters. Please exit, (this will save automatically).')
-            self.label.grid(column=0,row=0,sticky=NSEW)
-        else:
-            self.root.title('Do these belong to the same cluster?')
-            im1,im2 = pairing
+        print(c)
+
+        if check_self:
+            cluster,_ = self.ci.suggest_intra_pairing()
 
             imwidth = self.width
             imheight = self.height
 
+            im1,im2 = self.ci.get_node_name_from_cluster(cluster),self.ci.get_node_name_from_cluster(cluster)
+
             self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
             self.subdirframe.grid(column=0, row=0, sticky=NSEW)
-
-            model_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im1)).resize((imwidth, imheight)))
+            
+            model_img = ImageTk.PhotoImage(Image.open(im1).resize((imwidth, imheight)))
             model = ttk.Label(master=self.subdirframe, image=model_img)
             model.image = model_img
             model.grid(column=0, row=0, sticky=NSEW)
 
-            comp_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im2)).resize((imwidth, imheight)))
+            comp_img = ImageTk.PhotoImage(Image.open(im2).resize((imwidth, imheight)))
             comp = ttk.Label(master=self.subdirframe, image=comp_img)
             comp_img.image = comp_img
             comp.grid(column=1, row=0, sticky=NSEW)
 
-            no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.is_bad_pairing, im1, im2, self._set_subdirframe))
+            no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.problem_with_cluster, cluster, im1, im2, self._set_subdirframe))
             no.grid(column=0, row=1, sticky=NSEW)
 
-            yes = Button(master=self.subdirframe, text='YES', height=10, command=partial(self.ci.is_good_pairing, im1, im2, self._set_subdirframe))
+            yes = Button(master=self.subdirframe, text='YES', height=10, command=self._set_subdirframe)
             yes.grid(column=1, row=1, sticky=NSEW)
+        else:
+            pairing = self.ci.suggest_pairing()
+
+            if pairing is False:
+                self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
+                self.subdirframe.grid(column=0,row=0,sticky=NSEW)
+                self.label = ttk.Label(master=self.subdirframe, text='No more available clusters. Please exit, (this will save automatically).')
+                self.label.grid(column=0,row=0,sticky=NSEW)
+            else:
+                self.root.title('Do these belong to the same cluster?')
+                im1,im2 = pairing
+
+                imwidth = self.width
+                imheight = self.height
+
+                self.subdirframe = ttk.Frame(master=self.mainframe, borderwidth=2, relief=GROOVE)
+                self.subdirframe.grid(column=0, row=0, sticky=NSEW)
+
+                model_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im1)).resize((imwidth, imheight)))
+                model = ttk.Label(master=self.subdirframe, image=model_img)
+                model.image = model_img
+                model.grid(column=0, row=0, sticky=NSEW)
+
+                comp_img = ImageTk.PhotoImage(Image.open(self.ci.get_node_name_from_cluster(im2)).resize((imwidth, imheight)))
+                comp = ttk.Label(master=self.subdirframe, image=comp_img)
+                comp_img.image = comp_img
+                comp.grid(column=1, row=0, sticky=NSEW)
+
+                no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.is_bad_pairing, im1, im2, self._set_subdirframe))
+                no.grid(column=0, row=1, sticky=NSEW)
+
+                yes = Button(master=self.subdirframe, text='YES', height=10, command=partial(self.ci.is_good_pairing, im1, im2, self._set_subdirframe))
+                yes.grid(column=1, row=1, sticky=NSEW)
 
 if __name__ == "__main__":
     # root = Tk()  

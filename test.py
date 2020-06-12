@@ -1,107 +1,194 @@
-from graph import ClusterFCVertex, ClusterGraph
+from supernodegraph import NodeCV, NodeCG, NodeCGMW
+import time
 
 def scenario_one():
     print('***Scenario One***')
-    a1 = ClusterFCVertex('a1')
-    a2 = ClusterFCVertex('a2')
-    a3 = ClusterFCVertex('a3')
 
-    b1 = ClusterFCVertex('b1')
-    b2 = ClusterFCVertex('b2')
-    b3 = ClusterFCVertex('b3')
+    actual_a1 = NodeCV('a1')
+    predic_a1 = NodeCV('a1')
+    actual_a2 = NodeCV('a2')
+    predic_a2 = NodeCV('a2')
+    actual_a3 = NodeCV('a3')
+    predic_a3 = NodeCV('a3')
 
-    c1 = ClusterFCVertex('c1')
-    c2 = ClusterFCVertex('c2')
+    actual_b1 = NodeCV('b1')
+    predic_b1 = NodeCV('b1')
+    actual_b2 = NodeCV('b2')
+    predic_b2 = NodeCV('b2')
+    actual_b3 = NodeCV('b3')
+    predic_b3 = NodeCV('b3')
 
-    g = ClusterGraph(set([a1,a2,a3,b1,b2,b3,c1,c2]))
+    actual_c1 = NodeCV('c1')
+    predic_c1 = NodeCV('c1')
+    actual_c2 = NodeCV('c2')
+    predic_c2 = NodeCV('c2')
 
-    a1.add_neighbor(a2)
-    a2.add_neighbor(a3)
+    actual = NodeCG(set([
+        actual_a1,
+        actual_a2,
+        actual_a3,
+        actual_b1,
+        actual_b2,
+        actual_b3,
+        actual_c1,
+        actual_c2
+    ]))
 
-    a1.add_pred_neighbor(a2)
-    a1.add_pred_neighbor(a3)
-    a2.add_pred_neighbor(b1)
+    predicted = NodeCG(set([
+        predic_a1,
+        predic_a2,
+        predic_a3,
+        predic_b1,
+        predic_b2,
+        predic_b3,
+        predic_c1,
+        predic_c2
+    ]))
 
-    b1.add_neighbor(b2)
-    b2.add_neighbor(b3)
+    actual_a1.add_neighbor(actual_a2)
+    actual_a2.add_neighbor(actual_a3)
 
-    b1.add_pred_neighbor(b2)
-    b2.add_pred_neighbor(b3)
+    predic_a1.add_neighbor(predic_a2)
+    predic_a1.add_neighbor(predic_a3)
+    predic_a2.add_neighbor(predic_b1)
 
-    c1.add_neighbor(c2)
-    c1.add_pred_neighbor(c2)
+    actual_b1.add_neighbor(actual_b2)
+    actual_b2.add_neighbor(actual_b3)
 
-    g.update()
+    predic_b1.add_neighbor(predic_b2)
+    predic_b2.add_neighbor(predic_b3)
 
-    print(g.metrics())
+    actual_c1.add_neighbor(actual_c2)
+    predic_c1.add_neighbor(predic_c2)
+
+    cgmw = NodeCGMW(predicted=predicted, actual=actual)
+
+    print('Expected', '(0.625, 1.0, 0.75)')
+    print('Got     ', cgmw.metrics())
 
 def scenario_two(per_cluster=50):
     print('***Scenario Two***')
-    a1 = ClusterFCVertex('a1')
-    a2 = ClusterFCVertex('a2')
-    a3 = ClusterFCVertex('a3')
+    start = time.time()
 
-    b1 = ClusterFCVertex('b1')
-    b2 = ClusterFCVertex('b2')
-    b3 = ClusterFCVertex('b3')
+    actual_a1 = NodeCV('a1')
+    predic_a1 = NodeCV('a1')
+    actual_a2 = NodeCV('a2')
+    predic_a2 = NodeCV('a2')
+    actual_a3 = NodeCV('a3')
+    predic_a3 = NodeCV('a3')
 
-    c1 = ClusterFCVertex('c1')
-    c2 = ClusterFCVertex('c2')
+    actual_b1 = NodeCV('b1')
+    predic_b1 = NodeCV('b1')
+    actual_b2 = NodeCV('b2')
+    predic_b2 = NodeCV('b2')
+    actual_b3 = NodeCV('b3')
+    predic_b3 = NodeCV('b3')
 
-    g = ClusterGraph(set([a1,a2,a3,b1,b2,b3,c1,c2]))
+    actual_c1 = NodeCV('c1')
+    predic_c1 = NodeCV('c1')
+    actual_c2 = NodeCV('c2')
+    predic_c2 = NodeCV('c2')
 
-    a1.add_neighbor(a2)
-    a2.add_neighbor(a3)
+    actual = NodeCG(set([
+        actual_a1,
+        actual_a2,
+        actual_a3,
+        actual_b1,
+        actual_b2,
+        actual_b3,
+        actual_c1,
+        actual_c2
+    ]))
 
-    a1.add_pred_neighbor(a2)
-    a1.add_pred_neighbor(a3)
-    a2.add_pred_neighbor(b1)
+    predicted = NodeCG(set([
+        predic_a1,
+        predic_a2,
+        predic_a3,
+        predic_b1,
+        predic_b2,
+        predic_b3,
+        predic_c1,
+        predic_c2
+    ]))
+
+    actual_a1.add_neighbor(actual_a2)
+    actual_a2.add_neighbor(actual_a3)
+
+    predic_a1.add_neighbor(predic_a2)
+    predic_a1.add_neighbor(predic_a3)
+    predic_a2.add_neighbor(predic_b1)
+
+    for i in range(4, per_cluster): # make a a cluster of 1000
+        pv = NodeCV('a{}'.format(i))
+        av = NodeCV('a{}'.format(i))
+        actual.add_vertex(av)
+        predicted.add_vertex(pv)
+        av.add_neighbor(actual_a1)
+        pv.add_neighbor(predic_c1)
+
+    actual_b1.add_neighbor(actual_b2)
+    actual_b2.add_neighbor(actual_b3)
+
+    predic_b1.add_neighbor(predic_b2)
+    predic_b2.add_neighbor(predic_b3)
+
+    for i in range(4, per_cluster): # make b a cluster of 1000
+        pv = NodeCV('b{}'.format(i))
+        av = NodeCV('b{}'.format(i))
+        actual.add_vertex(av)
+        predicted.add_vertex(pv)
+        av.add_neighbor(actual_b1)
+        pv.add_neighbor(predic_c1)
+
+    actual_c1.add_neighbor(actual_c2)
+    predic_c1.add_neighbor(predic_c1)
 
     for i in range(4, per_cluster): # make c a cluster of 1000
-        v = ClusterFCVertex('a{}'.format(i))
-        g.add_vertex(v)
-        v.add_neighbor(a1)
-        v.add_pred_neighbor(c1)
-
-    b1.add_neighbor(b2)
-    b2.add_neighbor(b3)
-
-    b1.add_pred_neighbor(b2)
-    b2.add_pred_neighbor(b3)
-
-    for i in range(4, per_cluster): # make c a cluster of 1000
-        v = ClusterFCVertex('b{}'.format(i))
-        g.add_vertex(v)
-        v.add_neighbor(b1)
-        v.add_pred_neighbor(c1)
-
-    c1.add_neighbor(c2)
-    c1.add_pred_neighbor(c2)
-
-    for i in range(4, per_cluster): # make c a cluster of 1000
-        v = ClusterFCVertex('c{}'.format(i))
-        g.add_vertex(v)
-        v.add_neighbor(c1)
-        v.add_pred_neighbor(c1)
+        pv = NodeCV('c{}'.format(i))
+        av = NodeCV('c{}'.format(i))
+        actual.add_vertex(av)
+        predicted.add_vertex(pv)
+        av.add_neighbor(actual_c1)
+        pv.add_neighbor(predic_c1)
     
-    c1.add_pred_neighbor(a1)
+    # c1.add_pred_neighbor(a1)
 
-    g.update()
+    predic_c1.add_neighbor(predic_a1)
 
-    print(g.metrics())
+    init_checkpoint = time.time() - start
 
-    print(g)
+    print('Graph initialized in {}s'.format(init_checkpoint))
 
-    g.save_clusters('testest')
 
-    g.load_clusters('testest.json')
+    cgmw = NodeCGMW(predicted=predicted, actual=actual)
 
-    print(g.metrics())
+    metrics = cgmw.metrics()
+    end = time.time()
+    print('Got metrics in {}s'.format(end - start - init_checkpoint))
 
-    print(g)
+    print('Expected', '<NA>')
+    print('Got     ', metrics)
+
+
+    # cgmw.save_to_json_file('testest.json')
+
+    # cgmw.load_from_json_file('testest.json')
+
+    # print(cgmw.metrics())
+
+    # print(g)
 
 # def scenario
 
 if __name__ == "__main__":
-    # scenario_one()
-    scenario_two(5)
+    
+    scenario_one()
+
+    print('\n')
+    
+    # for num_nodes in [100, 1000, 3000, 5000, 10_000]:
+    # for num_nodes in [20_000]:
+    for num_nodes in [1000]:
+        print('Scenario Two executed for ~{} nodes'.format(3 * num_nodes))
+        scenario_two(num_nodes)
+        print('\n')
