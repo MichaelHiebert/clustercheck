@@ -1,5 +1,5 @@
 from graph import ClusterVertex, ClusterGraph, CGMetricsWrapper
-from os import listdir
+import os
 from os.path import isfile, join
 
 # Implementations of the Abstract Classes in `graph.py`
@@ -112,10 +112,27 @@ class NodeCGMW(CGMetricsWrapper):
 
         self._handle_incorrects(cur_dir, incorrect_preds)
 
+    def load_from_unorganized_folder(self, folder_path):
+        '''
+            Get all images from this folder and set each as its own separate node.
+
+            TODO: sanitization of filepaths
+        '''
+
+        f = []
+        for _, _, filenames in os.walk(folder_path):
+            f.extend(filenames)
+
+        for filename in f:
+            node_name = f'{folder_path}/{filename}'
+            node = NodeCV(node_name)
+            self.predicted.add_vertex(node)
+            self.actual.add_vertex(node)
+
     def _handle_incorrects(self, cur_dir, incorrect_preds):
         if cur_dir == '': return
 
-        all_files = set([join(cur_dir,f) for f in listdir(cur_dir) if isfile(join(cur_dir, f))])
+        all_files = set([join(cur_dir,f) for f in os.listdir(cur_dir) if isfile(join(cur_dir, f))])
         if len(all_files) == 0: return
 
         incorrect_preds = set(incorrect_preds)

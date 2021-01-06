@@ -133,9 +133,12 @@ class Display:
 
         no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self._no, ix))
         no.grid(column=0, row=1, sticky=NSEW)
+        self.subdirframe.bind("n", partial(self._no, ix))
 
         yes = Button(master=self.subdirframe, text='YES', height=10, command=partial(self._yes, ix))
         yes.grid(column=1, row=1, sticky=NSEW)
+        self.subdirframe.bind("y", partial(self._yes, ix))
+
 
     def _yes(self, ix):
         self.results.append(True)
@@ -235,7 +238,13 @@ class MetaDisplay:
         return random.choice(list(available))
 
     def _handle_close(self):
-        t = get_timestamp_string()
+
+        try:
+            os.mkdir('metadata')
+        except:
+            pass
+        
+        t = f'metadata/{get_timestamp_string()}'
         self.ci.save(t)
         print('Saved to {}.json'.format(t))
         self.root.destroy()
@@ -285,9 +294,11 @@ class MetaDisplay:
 
             no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.problem_with_cluster, cluster, im1, im2, self._set_subdirframe))
             no.grid(column=0, row=1, sticky=NSEW)
+            self.root.bind('n', lambda event: self.ci.problem_with_cluster(cluster, im1, im2, self._set_subdirframe))
 
             yes = Button(master=self.subdirframe, text='YES', height=10, command=self._set_subdirframe)
             yes.grid(column=1, row=1, sticky=NSEW)
+            self.root.bind('y', lambda event: self._set_subdirframe())
         else:
             pairing = self.ci.suggest_pairing()
 
@@ -317,9 +328,11 @@ class MetaDisplay:
 
                 no = Button(master=self.subdirframe, text='NO', height=10, command=partial(self.ci.is_bad_pairing, im1, im2, self._set_subdirframe))
                 no.grid(column=0, row=1, sticky=NSEW)
+                self.root.bind('n', lambda event: self.ci.is_bad_pairing(im1, im2, self._set_subdirframe))
 
                 yes = Button(master=self.subdirframe, text='YES', height=10, command=partial(self.ci.is_good_pairing, im1, im2, self._set_subdirframe))
                 yes.grid(column=1, row=1, sticky=NSEW)
+                self.root.bind('y', lambda event: self.ci.is_good_pairing(im1, im2, self._set_subdirframe))
 
 if __name__ == "__main__":
     # root = Tk()  
